@@ -22,13 +22,10 @@ void delete_rbtree(rbtree *t) {
 node_t *rbtree_insert(rbtree *t, const key_t key) { // 트리와 insert할 값을 넣음
   // TODO: implement insert
   // CLRS pseudo code 참고
-  node_t *y = (node_t *)calloc(1, sizeof(node_t));
-  node_t *x = (node_t *)calloc(1, sizeof(node_t));
+  node_t *y = t->nil; 
+  node_t *x = t->root;
   node_t *new_node = (node_t *)calloc(1, sizeof(node_t)); // z에 대한 새로운 노드
-  new_node->key = key // z에 대한 key값 설정
-  
-  y = t->nil; // 구조체 안에 있는 멤버는 투포인터로 안찍어도 되나?
-  x = t->root; 
+  new_node->key = key; // z에 대한 key값 설정
 
   while ( x != t->nil )
   {
@@ -47,14 +44,113 @@ node_t *rbtree_insert(rbtree *t, const key_t key) { // 트리와 insert할 값�
   if (y == t->nil)       // 처음부터 nil으로 빈 트리를 의미
     t->root = new_node;
   else if (new_node->key < y->key)
+    y->left = new_node;
+  else y->right = new_node;
 
-
-
-
-
-
-
+  new_node->left = t->nil;
+  new_node->right = t->nil;
+  new_node->color = RBTREE_RED;
+  
+  insert_fixup(t, new_node);
   return t->root;
+}
+
+// Insert-FIXUP
+void insert_fixup(rbtree *t, node_t *new_node){
+  // CLRS Terms ; (CLRS ; VS code)
+  // (T ; t), (z ; new_node), (p ; parent), 
+  
+  while (new_node->parent->color == RBTREE_RED){
+    if (new_node->parent == new_node->parent->parent->left){
+      node_t *y = new_node->parent->parent->right; // line 3 make uncle
+      if (y->color == RBTREE_RED){
+        new_node->parent->color = RBTREE_BLACK;
+        y->color = RBTREE_BLACK;
+        new_node->parent->parent->color = RBTREE_RED;
+        new_node = new_node->parent->parent;
+      }
+      else {
+        if (new_node == new_node->parent->right) {
+        new_node = new_node->parent;
+        // LEFT - ROTATE (T, Z)
+        left_rotate(t, new_node);
+      }
+      new_node->parent->color = RBTREE_BLACK;
+      new_node->parent->parent->color = RBTREE_RED;
+      // RIGHT - ROTATE (T, Z.P.P)
+      right_rotate(t, new_node->parent->parent);
+      }
+  }
+  else {
+      node_t *y = new_node->parent->parent->left; // line 3 make uncle
+      if (y->color == RBTREE_RED){
+        new_node->parent->color = RBTREE_BLACK;
+        y->color = RBTREE_BLACK;
+        new_node->parent->parent->color = RBTREE_RED;
+        new_node = new_node->parent->parent;
+      }
+      else { 
+      if (new_node == new_node->parent->left) {
+        new_node = new_node->parent;
+        // RIGHT - ROTATE (T, Z)
+        right_rotate(t, new_node);
+      }
+      new_node->parent->color = RBTREE_BLACK;
+      new_node->parent->parent->color = RBTREE_RED;
+      // LEFT - ROTATE (T, Z.p.p)
+      left_rotate(t, new_node->parent->parent);
+      }
+  }
+  }
+  t->root->color = RBTREE_BLACK;
+}
+
+// LEFT-ROTATE (T, x)
+// T = rbtree *t , x = new_node
+void left_rotate(rbtree *t, node_t *new_node) {
+  node_t *y = new_node->right;               // y를 설정
+  new_node->right = y->left;         // y의 왼쪽 서브트리를 new_node의 오른쪽 서브트리로 옮김
+  if (y->left != t->nil){        
+    y->left->parent = new_node;
+  }
+  y->parent = new_node->parent;      // new_node의 부모를 y로 연결
+
+  if (new_node->parent == t->nil){
+    t->root = y;
+  }
+
+  else if (new_node == new_node->parent->left){
+    new_node->parent->left = y;
+  }
+
+  else new_node->parent->right = y;
+
+  y->left = new_node;
+  new_node->parent = y;
+}
+
+// RIGHT-ROTATE (T, x)
+// T = rbtree *t , x = new_node
+void right_rotate(rbtree *t, node_t *new_node) {
+  node_t *y = new_node->left;               // y를 설정
+  new_node->left = y->right;         // y의 왼쪽 서브트리를 new_node의 오른쪽 서브트리로 옮김
+  if (y->right != t->nil){        
+    y->right->parent = new_node;
+  }
+  y->parent = new_node->parent;      // new_node의 부모를 y로 연결
+
+  if (new_node->parent == t->nil){
+    t->root = y;
+  }
+
+  else if (new_node == new_node->parent->right){
+    new_node->parent->right = y;
+  }
+
+  else new_node->parent->left = y;
+
+  y->right = new_node;
+  new_node->parent = y;
 }
 
 node_t *rbtree_find(const rbtree *t, const key_t key) {
