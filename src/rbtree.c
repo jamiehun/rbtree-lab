@@ -166,11 +166,9 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
     if (x->key == key){
       return x;
     }
-
     else if (x->key < key){
       x = x->right;
     }
-
     else {
       x = x->left;
     }
@@ -179,13 +177,31 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
 }
 
 
+// MINIMUM
 node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
-  return t->root;
+  node_t* x = t->root;
+  node_t* y = t->nil;
+
+  while (x->left != NULL){
+    y = x;
+    x = x->left;
+  }
+  return y;
 }
 
+// MAXIMUM
 node_t *rbtree_max(const rbtree *t) {
   // TODO: implement find
+  node_t* x = t->root;
+  node_t* y = t->nil;
+
+  while (x->right != NULL){
+    y = x;
+    x = x->right;
+  }
+  return y;
+  
   return t->root;
 }
 
