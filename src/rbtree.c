@@ -19,8 +19,8 @@ void delete_rbtree(rbtree *t) {
   free(t);
 }
 
+// RBTREE INSERT
 // rbtree_insert 후 node_t가 return되어야 하므로 자료형에 node_t로 정의
-
 node_t *rbtree_insert(rbtree *t, const key_t key) { // 트리와 insert할 값을 넣음
   // TODO: implement insert
   // CLRS pseudo code 참고
@@ -157,10 +157,27 @@ void right_rotate(rbtree *t, node_t *new_node) {
   new_node->parent = y;
 }
 
+//FIND
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   // TODO: implement find
-  return t->root;
+  node_t *x = t->root;
+
+  while((x != NULL)){
+    if (x->key == key){
+      return x;
+    }
+
+    else if (x->key < key){
+      x = x->right;
+    }
+
+    else {
+      x = x->left;
+    }
+  }
+    return NULL;
 }
+
 
 node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
