@@ -19,10 +19,12 @@ void delete_rbtree(rbtree *t) {
   free(t);
 }
 
+// rbtree_insert 후 node_t가 return되어야 하므로 자료형에 node_t로 정의
+
 node_t *rbtree_insert(rbtree *t, const key_t key) { // 트리와 insert할 값을 넣음
   // TODO: implement insert
   // CLRS pseudo code 참고
-  node_t *y = t->nil; 
+  node_t *y = t->nil;  // t는 인자로 들고오므로 node_t *y로 설정함
   node_t *x = t->root;
   node_t *new_node = (node_t *)calloc(1, sizeof(node_t)); // z에 대한 새로운 노드
   new_node->key = key; // z에 대한 key값 설정
@@ -51,15 +53,16 @@ node_t *rbtree_insert(rbtree *t, const key_t key) { // 트리와 insert할 값�
   new_node->right = t->nil;
   new_node->color = RBTREE_RED;
   
-  insert_fixup(t, new_node);
+  insert_fixup(t, new_node); // insert_fixup 함수 설정
   return t->root;
 }
 
 // Insert-FIXUP
+// Insert-Fixup의 경우 반환하는 값이 없고 insert에 대한 수정만 이루기 때문에 void로 설정함
+// rbtree.h에도 똑같이 설정 필요
 void insert_fixup(rbtree *t, node_t *new_node){
   // CLRS Terms ; (CLRS ; VS code)
   // (T ; t), (z ; new_node), (p ; parent), 
-  
   while (new_node->parent->color == RBTREE_RED){
     if (new_node->parent == new_node->parent->parent->left){
       node_t *y = new_node->parent->parent->right; // line 3 make uncle
@@ -69,7 +72,7 @@ void insert_fixup(rbtree *t, node_t *new_node){
         new_node->parent->parent->color = RBTREE_RED;
         new_node = new_node->parent->parent;
       }
-      else {
+      else { // 여기에서 psuedo code는 else if로 되어 있는데 아래와 같이 바꿔줘야함
         if (new_node == new_node->parent->right) {
         new_node = new_node->parent;
         // LEFT - ROTATE (T, Z)
@@ -89,7 +92,7 @@ void insert_fixup(rbtree *t, node_t *new_node){
         new_node->parent->parent->color = RBTREE_RED;
         new_node = new_node->parent->parent;
       }
-      else { 
+      else { // 여기에서 psuedo code는 else if로 되어 있는데 아래와 같이 바꿔줘야함
       if (new_node == new_node->parent->left) {
         new_node = new_node->parent;
         // RIGHT - ROTATE (T, Z)
@@ -106,6 +109,7 @@ void insert_fixup(rbtree *t, node_t *new_node){
 }
 
 // LEFT-ROTATE (T, x)
+// LEFT-ROTATE의 경우에도 반환값이 void이기 때문에 void값 설정함
 // T = rbtree *t , x = new_node
 void left_rotate(rbtree *t, node_t *new_node) {
   node_t *y = new_node->right;               // y를 설정
