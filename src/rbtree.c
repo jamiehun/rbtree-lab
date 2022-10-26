@@ -1,6 +1,7 @@
 #include "rbtree.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 /* NEW RB_TREE */
 rbtree *new_rbtree(void) {
@@ -15,11 +16,21 @@ rbtree *new_rbtree(void) {
   return p;
 }
 
-
+void delete_node(rbtree* t, node_t* rnode) {
+  if (rnode == t->nil) {
+    return;
+  }
+  delete_node(t, rnode->left);
+  delete_node(t, rnode->right);
+  free(rnode);
+}
 void delete_rbtree(rbtree *t) {
   // TODO: reclaim the tree nodes's memory
+  delete_node(t, t->root);
+  free(t->nil);
   free(t);
 }
+
 
 /* RBTREE INSERT */
 // rbtree_insert 후 node_t가 return되어야 하므로 자료형에 node_t로 정의
@@ -174,13 +185,14 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
     else {
       x = x->left;
     }
-  }
-    return NULL;
+  }     
+  
+  return NULL;
 }
 
 
 /* MINIMUM */
-node_t *rbtree_min(const rbtree *) {
+node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
   node_t* x = t->root;
   node_t* y = t->nil;
@@ -193,7 +205,7 @@ node_t *rbtree_min(const rbtree *) {
 }
 
 /* MAXIMUM */
-node_t *rbtree_max(const rbtree *) {
+node_t *rbtree_max(const rbtree *t) {
   // TODO: implement find
   node_t *x = t->root;
   node_t *y = t->nil;
@@ -205,6 +217,17 @@ node_t *rbtree_max(const rbtree *) {
   return y;
 }
 
+
+/* MINIMUM_num */
+// 서브트리에서 Min값 찾는 함수
+node_t *rbtree_min_num(const rbtree *t, node_t *min_node) {
+  // TODO: implement find
+  while (min_node->left != t->nil){
+    min_node = min_node->left;
+  }
+  return min_node;
+}
+
 /* RBTREE_ERASE */
 // ERASE P from rbtree t
 // reference : CRLS
@@ -214,7 +237,8 @@ int rbtree_erase(rbtree *t, node_t *p) {
   // (y : y), (z : p), (T : t), 
   
   node_t *x;
-  node_t *y = p;                 // 삭제하려는 노드 저장
+  node_t *y;
+  y = p;                 // 삭제하려는 노드 저장
   color_t y_original_color = y->color;   // y의 기본 색 저장
   
   // 자식 노드가 right만 있을 경우
@@ -235,17 +259,20 @@ int rbtree_erase(rbtree *t, node_t *p) {
   else {
     
     // p의 오른쪽 기준으로 최솟값 저장 (node_t 값으로 구현)
-    node_t *m = t->root->right;
-    node_t *n = t->nil;
+    // node_t *m = t->root->right;
+    // node_t *n = t->nil;
 
-    while (m->left != NULL) {
-      n = m;
-      n = n->left;
-    }
-    y = n;
+    // while (m->left != NULL) {
+    //   n = m;
+    //   m = m->left;
+    // }
+
+    // y = n;
+
+    y = rbtree_min_num(t, p->right);
 
     y_original_color = y->color;  // 최솟값의 색깔을 해당 변수에 저장시킴
-    x = p->right;         // x는 p의 자녀
+    x = y->right;         // x는 p의 자녀
     
     // y의 부모가 p일 경우
     if (y->parent == p){
@@ -267,10 +294,10 @@ int rbtree_erase(rbtree *t, node_t *p) {
     y->color = p->color;
   }
 
-  if (y_original_color == RBTREE_BLACK){
+  if (y_original_color == RBTREE_BLACK) {
     rbtree_delete_fixup(t, x);
   }
-
+  free(p);
   return 0;
 }
 
@@ -279,10 +306,11 @@ int rbtree_erase(rbtree *t, node_t *p) {
 void rbtree_delete_fixup(rbtree *t, node_t *x){
   // CRLS pseudo code variable changed (CRLS : VSCODE)
   // (x : x), (w : w)
+  node_t *w;
 
   while ((x != t->root) && (x->color == RBTREE_BLACK)){
     if (x == x->parent->left){
-      node_t *w = x->parent->right;
+      w = x->parent->right;
       
       // 경우 1 시작
       if (w->color == RBTREE_RED){
@@ -301,8 +329,8 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
       // 경우 3 시작
       else {
         if (w->right->color == RBTREE_BLACK){
-          w->left->color == RBTREE_BLACK;
-          w->color == RBTREE_RED;
+          w->left->color = RBTREE_BLACK;
+          w->color = RBTREE_RED;
           right_rotate(t, w);
           w = x->parent->right;
         }
@@ -337,8 +365,8 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
       // else 경우 3 시작
       else {
         if (w->left->color == RBTREE_BLACK){
-          w->right->color == RBTREE_BLACK;
-          w->color == RBTREE_RED;
+          w->right->color = RBTREE_BLACK;
+          w->color = RBTREE_RED;
           left_rotate(t, w);
           w = x->parent->left;
         }
@@ -351,9 +379,9 @@ void rbtree_delete_fixup(rbtree *t, node_t *x){
         x = t->root;
       }
     }
-
-  x->color = RBTREE_BLACK;
   }
+  x->color = RBTREE_BLACK;
+  
 }
 
 
@@ -375,8 +403,23 @@ void rbtree_transplant(rbtree *t, node_t *u, node_t *v){
   v->parent = u->parent;
 }
 
+// 중위순회 함수 선언
+int inorder(const rbtree *t, node_t *p, key_t *arr, int idx, int n){ 
+  if (p == t->nil || idx >= n){
+    return idx;
+  }
+  printf("%d", p->key);
+  
+  idx = inorder(t, p->left, arr, idx, n);
+  arr[idx++] = p->key;
+  idx = inorder(t, p->right, arr, idx, n);
+  return idx;
+}
 
+// 중위순회, 배열의 값을 넣어야함
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
+  inorder(t, t->root, arr, 0, n);
   return 0;
 }
+
