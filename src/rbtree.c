@@ -432,8 +432,8 @@ int inorder(const rbtree *t, node_t *p, key_t *arr, int idx, int n){
   }
   printf("%d", p->key);
   
-  idx = inorder(t, p->left, arr, idx, n);
-  arr[idx++] = p->key;
+  idx = inorder(t, p->left, arr, idx, n);   // inorder의 값을 idx에 저장하며 재귀로 내려감 (idx = 0)
+  arr[idx++] = p->key;                      // idx를 증가시키면서 p의 키 값을 저장함
   idx = inorder(t, p->right, arr, idx, n);
   return idx;
 }
